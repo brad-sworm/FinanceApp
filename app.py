@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import sqlite3
 import datetime
+import mysql
 import sqlalchemy as sa
 
 
@@ -17,7 +18,7 @@ st.title(':green[Stoccoli] :broccoli:  ')
 #connect to sql database
 conn = sqlite3.connect('finance_app.db')
 #set up engine, connection, cursor
-engine = sa.create_engine('mysql+mysqldb://admin:root1234@database-2.cbm2gcgo0w9n.us-east-2.rds.amazonaws.com:3306/financedb')
+engine = sa.create_engine('mysql+mysqlclient://admin:root1234@database-2.cbm2gcgo0w9n.us-east-2.rds.amazonaws.com:3306/financedb')
 connection = engine.raw_connection()
 conn = connection.cursor()
 
