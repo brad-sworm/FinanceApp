@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import sqlite3
 import datetime
+import sqlalchemy as sa
 
 
 
@@ -15,6 +16,10 @@ st.title(':green[Stoccoli] :broccoli:  ')
 
 #connect to sql database
 conn = sqlite3.connect('finance_app.db')
+#set up engine, connection, cursor
+engine = sa.create_engine('mysql+mysqldb://admin:root1234@database-2.cbm2gcgo0w9n.us-east-2.rds.amazonaws.com:3306/financedb')
+connection = engine.raw_connection()
+conn = connection.cursor()
 
 
 
@@ -30,7 +35,7 @@ query = f"""
 SELECT industry AS industry, sector as sector FROM company_data 
 WHERE Ticker = '{tickerSymbol}';
 """
-comp_data = pd.DataFrame(conn.execute(query))
+comp_data = pd.read_sql_query(query, connection)
 industry = comp_data.iloc[0,0]
 sector = comp_data.iloc[0,1]
 st.write("Ticker:", tickerSymbol, "|    Industry:", industry, "|    Sector:", sector)
@@ -46,7 +51,7 @@ with col1:
         SELECT * FROM stock_price_data
         WHERE Ticker = '{tickerSymbol}' AND Date >= '{start_date}' AND Date <='{end_date}';
         """
-        data = conn.execute(query)
+        data = pd.read_sql_query(query, connection)
         a, b = st.columns([3,1])
         with a:
             with st.container(height=250, border=False):
@@ -59,9 +64,7 @@ with col1:
                     SELECT Date AS Date, `Adj Close` AS Close, sector_WASP AS `Sector Weighted Ave`,industry_WASP AS `Industry Weighted Ave` FROM stock_price_data
                     WHERE Ticker = '{tickerSymbol}' AND Date ='{end_date}';
                     """
-                    
-                    stock_end = conn.execute(query)
-                    stock_end = pd.DataFrame(stock_end)
+                    stock_end = pd.read_sql_query(query, connection)
                     stock_end_price = "%.2f" % stock_end.iat[0,1]
                     stock_sect = "%.2f" % stock_end.iat[0,2]
                     stock_ind = "%.2f" % stock_end.iat[0,3]
@@ -70,8 +73,7 @@ with col1:
                     SELECT Date AS Date, `Adj Close` AS Close, sector_WASP AS `Sector Weighted Ave`,industry_WASP AS `Industry Weighted Ave` FROM stock_price_data
                     WHERE Ticker = '{tickerSymbol}' AND Date ='{start_date}';
                     """
-                    stock_start = conn.execute(query)
-                    stock_start = pd.DataFrame(stock_start)
+                    stock_start = pd.read_sql_query(query, connection)
                     stock_start_price = "%.2f" % stock_start.iat[0,1]
                     stock_sect_start = "%.2f" % stock_start.iat[0,2]
                     stock_ind_start = "%.2f" % stock_start.iat[0,3]
@@ -101,9 +103,9 @@ with col1:
         SELECT sector AS sector, totalRevenue as totalRevenue FROM company_data
         WHERE sector = '{sector}' ;
         """
-        sect_data = pd.DataFrame(conn.execute(query))
-        sect_median = int(sect_data.groupby(sect_data[0]).median().iloc[0,0])
-        sect_ave = int(sect_data.groupby(sect_data[0]).mean().iloc[0,0])
+        sect_data = pd.DataFrame(pd.read_sql_query(query, connection))
+        sect_median = int(sect_data.groupby(sect_data['sector']).median().iloc[0,0])
+        sect_ave = int(sect_data.groupby(sect_data['sector']).mean().iloc[0,0])
         
         #get industry info
 
@@ -111,9 +113,9 @@ with col1:
         SELECT industry AS industry, totalRevenue as totalRevenue FROM company_data
         WHERE industry = '{industry}' ;
         """
-        ind_data = pd.DataFrame(conn.execute(query1))
-        ind_median = int(ind_data.groupby(ind_data[0]).median().iloc[0,0])
-        ind_ave = int(ind_data.groupby(ind_data[0]).mean().iloc[0,0])
+        ind_data = pd.DataFrame(pd.read_sql_query(query1, connection))
+        ind_median = int(ind_data.groupby(ind_data['industry']).median().iloc[0,0])
+        ind_ave = int(ind_data.groupby(ind_data['industry']).mean().iloc[0,0])
 
         #get ticker specific info
 
@@ -121,7 +123,7 @@ with col1:
         SELECT totalRevenue as totalRevenue FROM company_data
         WHERE Ticker = '{tickerSymbol}'  ;
         """
-        ticker_data = pd.DataFrame(conn.execute(query2))
+        ticker_data = pd.DataFrame(pd.read_sql_query(query2, connection))
         company_t_eps = int(ticker_data.iloc[0])
 
         rev_company = company_t_eps
@@ -141,9 +143,9 @@ with col1:
         SELECT sector AS sector, revenueGrowth AS revenueGrowth FROM company_data
         WHERE sector = '{sector}' ;
         """
-        sect_data = pd.DataFrame(conn.execute(query))
-        sect_median = float(sect_data.groupby(sect_data[0]).median().iloc[0,0])
-        sect_ave = float(sect_data.groupby(sect_data[0]).mean().iloc[0,0])
+        sect_data = pd.DataFrame(pd.read_sql_query(query, connection))
+        sect_median = float(sect_data.groupby(sect_data['sector']).median().iloc[0,0])
+        sect_ave = float(sect_data.groupby(sect_data['sector']).mean().iloc[0,0])
         
         #get industry info
 
@@ -151,9 +153,9 @@ with col1:
         SELECT industry AS industry, revenueGrowth AS revenueGrowth FROM company_data
         WHERE industry = '{industry}' ;
         """
-        ind_data = pd.DataFrame(conn.execute(query1))
-        ind_median = float(ind_data.groupby(ind_data[0]).median().iloc[0,0])
-        ind_ave = float(ind_data.groupby(ind_data[0]).mean().iloc[0,0])
+        ind_data = pd.DataFrame(pd.read_sql_query(query1, connection))
+        ind_median = float(ind_data.groupby(ind_data['industry']).median().iloc[0,0])
+        ind_ave = float(ind_data.groupby(ind_data['industry']).mean().iloc[0,0])
 
         #get ticker specific info
 
@@ -161,7 +163,7 @@ with col1:
         SELECT revenueGrowth AS revenueGrowth FROM company_data
         WHERE Ticker = '{tickerSymbol}'  ;
         """
-        ticker_data = pd.DataFrame(conn.execute(query2))
+        ticker_data = pd.DataFrame(pd.read_sql_query(query2, connection))
         company_t_eps = float(ticker_data.iloc[0])
         rev_growth_comp = company_t_eps
         rev_growth_sect = sect_median
@@ -178,9 +180,9 @@ with col1:
         SELECT sector AS sector, operatingMargins AS operatingMargins FROM company_data
         WHERE sector = '{sector}' ;
         """
-        sect_data = pd.DataFrame(conn.execute(query))
-        sect_median = float(sect_data.groupby(sect_data[0]).median().iloc[0,0])
-        sect_ave = float(sect_data.groupby(sect_data[0]).mean().iloc[0,0])
+        sect_data = pd.DataFrame(pd.read_sql_query(query, connection))
+        sect_median = float(sect_data.groupby(sect_data['sector']).median().iloc[0,0])
+        sect_ave = float(sect_data.groupby(sect_data['sector']).mean().iloc[0,0])
         
         #get industry info
 
@@ -188,9 +190,9 @@ with col1:
         SELECT industry AS industry, operatingMargins AS operatingMargins  FROM company_data
         WHERE industry = '{industry}' ;
         """
-        ind_data = pd.DataFrame(conn.execute(query1))
-        ind_median = float(ind_data.groupby(ind_data[0]).median().iloc[0,0])
-        ind_ave = float(ind_data.groupby(ind_data[0]).mean().iloc[0,0])
+        ind_data = pd.DataFrame(pd.read_sql_query(query1, connection))
+        ind_median = float(ind_data.groupby(ind_data['industry']).median().iloc[0,0])
+        ind_ave = float(ind_data.groupby(ind_data['industry']).mean().iloc[0,0])
 
         #get ticker specific info
 
@@ -198,7 +200,7 @@ with col1:
         SELECT operatingMargins AS operatingMargins  FROM company_data
         WHERE Ticker = '{tickerSymbol}'  ;
         """
-        ticker_data = pd.DataFrame(conn.execute(query2))
+        ticker_data = pd.DataFrame(pd.read_sql_query(query2, connection))
         company_t_eps = float(ticker_data.iloc[0])
 
         with c:
@@ -217,9 +219,9 @@ with col1:
         SELECT sector AS sector, earningsGrowth AS earningsGrowth FROM company_data
         WHERE sector = '{sector}' ;
         """
-        sect_data = pd.DataFrame(conn.execute(query))
-        sect_median = float(sect_data.groupby(sect_data[0]).median().iloc[0,0])
-        sect_ave = float(sect_data.groupby(sect_data[0]).mean().iloc[0,0])
+        sect_data = pd.DataFrame(pd.read_sql_query(query, connection))
+        sect_median = float(sect_data.groupby(sect_data['sector']).median().iloc[0,0])
+        sect_ave = float(sect_data.groupby(sect_data['sector']).mean().iloc[0,0])
         
         #get industry info
 
@@ -227,9 +229,9 @@ with col1:
         SELECT industry AS industry, earningsGrowth AS earningsGrowth  FROM company_data
         WHERE industry = '{industry}' ;
         """
-        ind_data = pd.DataFrame(conn.execute(query1))
-        ind_median = float(ind_data.groupby(ind_data[0]).median().iloc[0,0])
-        ind_ave = float(ind_data.groupby(ind_data[0]).mean().iloc[0,0])
+        ind_data = pd.DataFrame(pd.read_sql_query(query1, connection))
+        ind_median = float(ind_data.groupby(ind_data['industry']).median().iloc[0,0])
+        ind_ave = float(ind_data.groupby(ind_data['industry']).mean().iloc[0,0])
 
         #get ticker specific info
 
@@ -237,7 +239,7 @@ with col1:
         SELECT earningsGrowth AS earningsGrowth  FROM company_data
         WHERE Ticker = '{tickerSymbol}'  ;
         """
-        ticker_data = pd.DataFrame(conn.execute(query2))
+        ticker_data = (pd.read_sql_query(query2, connection))
         company_t_eps = float(ticker_data.iloc[0])
         comp_earnings_growth = company_t_eps
         sect_earnings_growth = sect_median
@@ -265,7 +267,7 @@ with col2:
             SELECT recommendationKey, recommendationMean, numberOfAnalystOpinions FROM company_data
             WHERE Ticker = '{tickerSymbol}'
             """
-            sent_data = pd.DataFrame(conn.execute(query))
+            sent_data = pd.DataFrame(pd.read_sql_query(query, connection))
             with a: 
                 with st.container(height=220, border=True):
                     st.write("Sentiment:", sent_data.iloc[0,0].upper())
@@ -280,9 +282,9 @@ with col2:
                 SELECT sector AS sector, trailingPE as trailingPE FROM company_data
                 WHERE sector = '{sector}' ;
                 """
-                sect_data = pd.DataFrame(conn.execute(query))
-                sect_median = int(sect_data.groupby(sect_data[0]).median().iloc[0,0])
-                sect_ave = int(sect_data.groupby(sect_data[0]).mean().iloc[0,0])
+                sect_data = pd.DataFrame(pd.read_sql_query(query, connection))
+                sect_median = int(sect_data.groupby(sect_data['sector']).median().iloc[0,0])
+                sect_ave = int(sect_data.groupby(sect_data['sector']).mean().iloc[0,0])
                 
             #get industry info
 
@@ -290,9 +292,9 @@ with col2:
                 SELECT industry AS industry, trailingPE as trailingPE FROM company_data
                 WHERE industry = '{industry}' ;
                 """
-                ind_data = pd.DataFrame(conn.execute(query1))
-                ind_median = int(ind_data.groupby(ind_data[0]).median().iloc[0,0])
-                ind_ave = int(ind_data.groupby(ind_data[0]).mean().iloc[0,0])
+                ind_data = pd.DataFrame(pd.read_sql_query(query1, connection))
+                ind_median = int(ind_data.groupby(ind_data['industry']).median().iloc[0,0])
+                ind_ave = int(ind_data.groupby(ind_data['industry']).mean().iloc[0,0])
 
             #get ticker specific info
 
@@ -300,7 +302,7 @@ with col2:
                 SELECT trailingPE as trailingPE FROM company_data
                 WHERE Ticker = '{tickerSymbol}'  ;
                 """
-                ticker_data = pd.DataFrame(conn.execute(query2))
+                ticker_data = pd.DataFrame(pd.read_sql_query(query2, connection))
                 company_t_eps = int(ticker_data.iloc[0])
                 with st.container(height=220, border=True):
                     st.metric(label="Trailing PE", value=(company_t_eps) , delta="")
@@ -320,9 +322,9 @@ with col2:
                 SELECT sector AS sector, shortRatio as shortRatio FROM company_data
                 WHERE sector = '{sector}' ;
                 """
-                sect_data = pd.DataFrame(conn.execute(query))
-                sect_median = int(sect_data.groupby(sect_data[0]).median().iloc[0,0])
-                sect_ave = int(sect_data.groupby(sect_data[0]).mean().iloc[0,0])
+                sect_data = pd.DataFrame(pd.read_sql_query(query, connection))
+                sect_median = int(sect_data.groupby(sect_data['sector']).median().iloc[0,0])
+                sect_ave = int(sect_data.groupby(sect_data['sector']).mean().iloc[0,0])
                 
             #get industry info
 
@@ -330,9 +332,9 @@ with col2:
                 SELECT industry AS industry, shortRatio as shortRatio FROM company_data
                 WHERE industry = '{industry}' ;
                 """
-                ind_data = pd.DataFrame(conn.execute(query1))
-                ind_median = int(ind_data.groupby(ind_data[0]).median().iloc[0,0])
-                ind_ave = int(ind_data.groupby(ind_data[0]).mean().iloc[0,0])
+                ind_data = pd.DataFrame(pd.read_sql_query(query1, connection))
+                ind_median = int(ind_data.groupby(ind_data['industry']).median().iloc[0,0])
+                ind_ave = int(ind_data.groupby(ind_data['industry']).mean().iloc[0,0])
 
             #get ticker specific info
 
@@ -340,7 +342,7 @@ with col2:
                 SELECT shortRatio as shortRatio FROM company_data
                 WHERE Ticker = '{tickerSymbol}'  ;
                 """
-                ticker_data = pd.DataFrame(conn.execute(query2))
+                ticker_data = pd.DataFrame(pd.read_sql_query(query2, connection))
                 company_t_eps = int(ticker_data.iloc[0])
                 with st.container(height=220, border=True):
                     st.metric(label="Short Ratio", value=(company_t_eps) , delta="")
@@ -355,9 +357,9 @@ with col2:
                 SELECT sector AS sector, sharesShort FROM company_data
                 WHERE sector = '{sector}' ;
                 """
-                sect_data = pd.DataFrame(conn.execute(query))
-                sect_median = int(sect_data.groupby(sect_data[0]).median().iloc[0,0])
-                sect_ave = int(sect_data.groupby(sect_data[0]).mean().iloc[0,0])
+                sect_data = pd.DataFrame(pd.read_sql_query(query, connection))
+                sect_median = int(sect_data.groupby(sect_data['sector']).median().iloc[0,0])
+                sect_ave = int(sect_data.groupby(sect_data['sector']).mean().iloc[0,0])
                 
             #get industry info
 
@@ -365,9 +367,9 @@ with col2:
                 SELECT industry AS industry, sharesShort FROM company_data
                 WHERE industry = '{industry}' ;
                 """
-                ind_data = pd.DataFrame(conn.execute(query1))
-                ind_median = int(ind_data.groupby(ind_data[0]).median().iloc[0,0])
-                ind_ave = int(ind_data.groupby(ind_data[0]).mean().iloc[0,0])
+                ind_data = pd.DataFrame(pd.read_sql_query(query1, connection))
+                ind_median = int(ind_data.groupby(ind_data['industry']).median().iloc[0,0])
+                ind_ave = int(ind_data.groupby(ind_data['industry']).mean().iloc[0,0])
 
             #get ticker specific info
 
@@ -375,7 +377,7 @@ with col2:
                 SELECT sharesShort FROM company_data
                 WHERE Ticker = '{tickerSymbol}'  ;
                 """
-                ticker_data = pd.DataFrame(conn.execute(query2))
+                ticker_data = pd.DataFrame(pd.read_sql_query(query2, connection))
                 company_t_eps = int(ticker_data.iloc[0])
 
                 comp_short = company_t_eps
@@ -387,9 +389,9 @@ with col2:
                 SELECT sector AS sector, sharesShortPriorMonth FROM company_data
                 WHERE sector = '{sector}' ;
                 """
-                sect_data_pm = pd.DataFrame(conn.execute(query))
-                sect_median_pm = int(sect_data_pm.groupby(sect_data_pm[0]).median().iloc[0,0])
-                sect_ave_pm = int(sect_data_pm.groupby(sect_data_pm[0]).mean().iloc[0,0])
+                sect_data_pm = pd.DataFrame(pd.read_sql_query(query, connection))
+                sect_median_pm = int(sect_data_pm.groupby(sect_data_pm['sector']).median().iloc[0,0])
+                sect_ave_pm = int(sect_data_pm.groupby(sect_data_pm['sector']).mean().iloc[0,0])
                 
             #get industry info
 
@@ -397,9 +399,9 @@ with col2:
                 SELECT industry AS industry, sharesShortPriorMonth FROM company_data
                 WHERE industry = '{industry}' ;
                 """
-                ind_data_pm = pd.DataFrame(conn.execute(query1))
-                ind_median_pm = int(ind_data_pm.groupby(ind_data_pm[0]).median().iloc[0,0])
-                ind_ave_pm = int(ind_data_pm.groupby(ind_data_pm[0]).mean().iloc[0,0])
+                ind_data_pm = pd.DataFrame(pd.read_sql_query(query1, connection))
+                ind_median_pm = int(ind_data_pm.groupby(ind_data_pm['industry']).median().iloc[0,0])
+                ind_ave_pm = int(ind_data_pm.groupby(ind_data_pm['industry']).mean().iloc[0,0])
 
             #get ticker specific info
 
@@ -407,7 +409,7 @@ with col2:
                 SELECT sharesShortPriorMonth FROM company_data
                 WHERE Ticker = '{tickerSymbol}'  ;
                 """
-                ticker_data_pm = pd.DataFrame(conn.execute(query2))
+                ticker_data_pm = pd.DataFrame(pd.read_sql_query(query2, connection))
                 company_t_eps_pm = int(ticker_data.iloc[0])
 
                 company_mom = (company_t_eps-company_t_eps_pm)/company_t_eps_pm
