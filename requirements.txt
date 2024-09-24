@@ -157,4 +157,7 @@ wrapt==1.14.1
 xgboost==2.0.3
 yahoo-fin==0.8.9.1
 yfinance==0.2.33
+zipp==3.17.0xgboost==2.0.3
+yahoo-fin==0.8.9.1
+yfinance==0.2.33
 zipp==3.17.0
