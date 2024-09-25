@@ -1,4 +1,4 @@
-﻿
+PyMySQL==1.1.1﻿
 SQLAlchemy==2.0.35
 mysql-connector-python==9.0.0
 
