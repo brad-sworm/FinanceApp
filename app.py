@@ -4,6 +4,7 @@ import pandas as pd
 import sqlite3
 import datetime
 import mysql
+import pymysql
 import sqlalchemy as sa
 
 
