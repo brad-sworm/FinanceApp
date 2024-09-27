@@ -66,7 +66,4 @@ with x:
     st.pyplot(fig)
 
     with y:
-        st.write('note that this is likely a fools errand as many try and few, if any, are successful')
-        st.write('however, here at stoccoli, we want to evaluate the company position snd determine if there is a sound pitch / hypothesis')
-        st.write('to start this need to plot next to S&P and then evaluate correlations if they exist between single or multiple indicators AKA determine predictors')
-        st.write('at the very least we can look predictions up or down and determine where wins / losses relative to the overall performance are expected to be beneficial vs. overall market')
+        st.write('Under Construction ')
